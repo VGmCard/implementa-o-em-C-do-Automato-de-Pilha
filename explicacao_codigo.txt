@@ -1,0 +1,326 @@
+================================================================================
+GUIA COMPLETO DE ESTUDO: EXPLICAÇÃO DETALHADA DO CÓDIGO DO AUTÔMATO
+================================================================================
+
+Este arquivo contém a explicação passo a passo de cada linha e de cada método das 
+classes implementadas no projeto do simulador de Autômato de Pilha e Autômato Finito.
+
+--------------------------------------------------------------------------------
+1. ARQUIVO: include/Automato.hpp
+--------------------------------------------------------------------------------
+Este arquivo define a classe abstrata base 'Automato'. Ela serve como molde comum.
+
+- Linhas 1-2: "#ifndef AUTOMATO_HPP" / "#define AUTOMATO_HPP"
+  São "diretivas de guarda" (header guards). Elas garantem que, mesmo que você inclua 
+  este arquivo múltiplas vezes no projeto, o compilador só o leia uma vez, evitando 
+  erros de redefinição de classe.
+  
+- Linha 4: "class Automato {"
+  Inicia a definição da classe.
+
+- Linha 5: "protected:"
+  Modificador de acesso. Indica que as variáveis abaixo só podem ser lidas e alteradas 
+  pela própria classe e pelas classes que herdam dela (as subclasses).
+
+- Linha 6: "int estado_inicial;"
+  Armazena o número do estado onde o autômato sempre começa a rodar.
+
+- Linha 7: "int estado_atual;"
+  Armazena o estado no qual a máquina se encontra em um dado instante do processamento.
+
+- Linha 9: "public:"
+  Modificador de acesso. Tudo abaixo pode ser acessado livremente de fora da classe.
+
+- Linha 11: "Automato(int inicial) : estado_inicial(inicial), estado_atual(inicial) {}"
+  Construtor da classe base. Inicializa os atributos 'estado_inicial' e 'estado_atual' 
+  com o valor passado no parâmetro.
+
+- Linha 12: "virtual ~Automato() {}"
+  Destrutor virtual. Em C++, quando usamos herança, o destrutor da classe pai DEVE ser 
+  virtual. Isso garante que, se deletarmos um objeto do tipo filho usando um ponteiro 
+  do tipo pai, a memória do objeto filho será liberada por completo.
+
+- Linha 15: "virtual void resetar() { estado_atual = estado_inicial; }"
+  Retorna o autômato ao estado inicial. É marcada como 'virtual' porque a classe 
+  do autômato de pilha precisará sobrescrever essa função para limpar a pilha também.
+
+- Linha 20: "virtual bool processar(const char* fita) = 0;"
+  Um método virtual puro (indicado pelo '= 0'). Isso faz com que 'Automato' seja uma 
+  classe abstrata. Significa que não podemos criar um objeto direto dela (ex: "Automato a;"). 
+  Quem herdar dela obrigatoriamente terá que implementar a lógica de processamento da fita.
+
+- Linha 23: "int obter_estado_atual() const { return estado_atual; }"
+  Método de acesso público (getter) para ver qual é o estado atual do autômato de fora da 
+  classe. O 'const' no final garante que esta função não modifica nenhuma variável da classe.
+
+
+--------------------------------------------------------------------------------
+2. ARQUIVO: include/AutomatoFinito.hpp
+--------------------------------------------------------------------------------
+Este arquivo define o cabeçalho da classe filha que implementa o Autômato Finito.
+
+- Linha 4: "#include "Automato.hpp""
+  Importa as definições da classe base.
+
+- Linha 6: "class AutomatoFinito : public Automato {"
+  Declara a classe AutomatoFinito herdando publicamente de Automato.
+
+- Linha 7: "private:"
+  Atributos e métodos privados (só a classe AutomatoFinito enxerga).
+
+- Linha 8: "int num_estados;"
+  A quantidade total de estados da máquina (usada para alocar vetores).
+
+- Linha 9: "int tam_alfabeto;"
+  Tamanho do alfabeto aceito (ex: se aceita 'a' e 'b', o tamanho é 2).
+
+- Linha 10: "int** matriz_transicoes;"
+  Ponteiro para ponteiro de int. É assim que declaramos uma matriz bidimensional 
+  dinâmica em C/C++ sem usar bibliotecas (vetores dinâmicos).
+
+- Linha 11: "bool* estados_aceitacao;"
+  Vetor de booleanos. Se 'estados_aceitacao[3]' for verdadeiro, significa que o 
+  estado 3 é um estado de aceitação.
+
+- Linha 14: "int obter_indice_simbolo(char c) const;"
+  Função interna para converter um caractere (ex: 'a', 'b') para sua respectiva 
+  coluna na matriz de transições (ex: 0, 1).
+
+- Linha 17: "public:"
+  Métodos acessíveis por qualquer arquivo.
+
+- Linha 19: "AutomatoFinito(int n_estados, int t_alfabeto, int inicial, const bool* aceitacao);"
+  Assinatura do construtor, detalhado no arquivo .cpp abaixo.
+
+- Linha 22: "~AutomatoFinito() override;"
+  Assinatura do destrutor. O termo 'override' indica explicitamente ao compilador que 
+  estamos sobrescrevendo o destrutor virtual da classe base 'Automato'.
+
+- Linha 25: "void definir_transicao(int de_estado, char simbolo, int para_estado);"
+  Registra uma regra na matriz de transição.
+
+- Linha 28: "bool processar(const char* fita) override;"
+  Sobrescreve o método virtual puro de processamento da fita.
+
+
+--------------------------------------------------------------------------------
+3. ARQUIVO: src/AutomatoFinito.cpp
+--------------------------------------------------------------------------------
+Aqui implementamos a lógica das funções declaradas em 'AutomatoFinito.hpp'.
+
+- Linha 5: "AutomatoFinito::AutomatoFinito(int n_estados, int t_alfabeto, int inicial, const bool* aceitacao)"
+  - Linha 6: ": Automato(inicial), num_estados(n_estados), tam_alfabeto(t_alfabeto) {"
+  Chama o construtor pai 'Automato(inicial)' para definir o estado inicial e inicializa 
+  as variáveis 'num_estados' e 'tam_alfabeto'.
+  
+- Linhas 9-12: 
+  "estados_aceitacao = new bool[num_estados];"
+  "for (int i = 0; i < num_estados; ++i) { estados_aceitacao[i] = aceitacao[i]; }"
+  Aloca dinamicamente um vetor do tamanho do número de estados e copia a configuração 
+  de quais estados são de aceitação.
+  
+- Linhas 15-22:
+  Aloca dinamicamente as linhas da matriz de transição.
+  "matriz_transicoes = new int*[num_estados];" cria as linhas (uma para cada estado).
+  O loop cria as colunas (uma para cada símbolo do alfabeto) em cada linha e as inicializa 
+  com '-1' (sinalizando que não há transição definida por padrão).
+
+- Linhas 26-31: "~AutomatoFinito()"
+  Destrutor. Libera toda a memória dinâmica que alocamos no construtor usando o comando 
+  'delete[]'. Deve-se desalocar cada linha da matriz de transições primeiro, depois o 
+  vetor de linhas, e por fim o vetor de aceitação. Se não fizermos isso, ocorre memory leak.
+
+- Linhas 34-38: "int AutomatoFinito::obter_indice_simbolo(char c) const"
+  Mapeamento físico do caractere na fita para a tabela. Se for 'a', retorna coluna 0; 
+  se for 'b', retorna coluna 1. Caso contrário, retorna -1 (símbolo inválido).
+
+- Linhas 41-46: "void AutomatoFinito::definir_transicao(int de_estado, char simbolo, int para_estado)"
+  Pega o índice correspondente ao símbolo. Se o estado de origem e o símbolo forem válidos, 
+  salva na matriz que "estado atual + símbolo = próximo estado" (ex: matriz[0][0] = 1).
+
+- Linhas 49-74: "bool AutomatoFinito::processar(const char* fita)"
+  - Linha 50: "resetar();"
+    Garante que a máquina começa no estado inicial.
+  - Linha 52-53: "int i = 0; while (fita[i] != '\0') {"
+    Cria um ponteiro de leitura 'i' e lê a string no estilo C caractere por caractere 
+    até encontrar o caractere nulo final ('\0').
+  - Linhas 54-59:
+    Obtém o índice do símbolo lido. Se for inválido (-1), para a execução e retorna falso.
+  - Linhas 61-65:
+    Busca o próximo estado na matriz: "proximo = matriz_transicoes[estado_atual][idx_simbolo];"
+    Se for '-1', significa que o autômato travou (não há regra para essa combinação). Para e retorna falso.
+  - Linha 67: "estado_atual = proximo;"
+    Se a transição existir, a máquina atualiza seu estado atual.
+  - Linha 68: "i++;"
+    Avança o cabeçote de leitura para a próxima letra na fita.
+  - Linha 73: "return estados_aceitacao[estado_atual];"
+    Terminou de ler a palavra. Retorna verdadeiro se o estado em que o autômato parou 
+    estiver marcado como estado de aceitação.
+
+
+--------------------------------------------------------------------------------
+4. ARQUIVO: include/Pilha.hpp
+--------------------------------------------------------------------------------
+Este arquivo define o cabeçalho de uma estrutura de dados customizada de Pilha de 
+caracteres (sem uso de bibliotecas padrão).
+
+- Linha 7: "struct No {"
+  Estrutura de um elemento interno da pilha.
+- Linha 8: "char dado;"
+  O valor guardado no nó (ex: '$' ou 'A').
+- Linha 9: "No* proximo;"
+  Ponteiro que aponta para o nó que está logo abaixo deste na pilha.
+- Linha 10: "No(char d, No* prox) : dado(d), proximo(prox) {}"
+  Construtor rápido da struct Nó.
+  
+- Linha 13: "No* topo;"
+  Ponteiro privado que sempre aponta para o elemento mais alto da pilha (ou nullptr se vazia).
+
+- Linhas 16-36:
+  Assinaturas dos métodos básicos de pilha:
+  - "empilhar(char c)": Equivalente ao 'push'.
+  - "desempilhar()": Equivalente ao 'pop' (remove e retorna).
+  - "ler_topo() const": Equivalente ao 'peek'/'top' (lê sem remover).
+  - "vazia() const": Retorna se topo é nullptr.
+  - "limpar()": Desaloca todos os nós da memória.
+  - "mostrar() const": Imprime visualmente a pilha de cima para baixo.
+
+
+--------------------------------------------------------------------------------
+5. ARQUIVO: src/Pilha.cpp
+--------------------------------------------------------------------------------
+Implementação do comportamento físico da Pilha.
+
+- Linha 5: "Pilha::Pilha() : topo(nullptr) {}"
+  Construtor da pilha. Toda pilha nova começa apontando o topo para nulo (vazia).
+
+- Linhas 8-10: "Pilha::~Pilha() { limpar(); }"
+  Destrutor. Chama a função 'limpar()' para garantir que nenhum nó fique perdido na memória.
+
+- Linhas 13-15: "void Pilha::empilhar(char c)"
+  Cria um novo Nó dinamicamente na memória. O dado do novo nó é 'c' e o ponteiro 'proximo' 
+  dele aponta para o antigo 'topo'. Em seguida, atualizamos a variável 'topo' para apontar 
+  para este novo nó recém-criado.
+
+- Linhas 18-28: "char Pilha::desempilhar()"
+  Verifica se a pilha está vazia. Se não estiver, cria um ponteiro temporário 'temp' que 
+  guarda o topo atual. Copia o caractere que está ali, faz a variável 'topo' avançar para 
+  o próximo elemento abaixo ('topo = topo->proximo'), deleta o nó que estava no topo 
+  ('delete temp') e retorna o caractere.
+
+- Linhas 31-36: "char Pilha::ler_topo() const"
+  Retorna o dado que está no topo atual sem modificar os ponteiros e sem apagar o nó.
+
+- Linhas 39-41: "bool Pilha::vazia() const"
+  Retorna verdadeiro se o topo for nulo (nullptr), o que significa que não há nós empilhados.
+
+- Linhas 44-48: "void Pilha::limpar()"
+  Fica chamando 'desempilhar()' em loop até que a pilha fique completamente vazia. Isso 
+  garante que todos os nós alocados dinamicamente com 'new' no heap sejam deletados.
+
+- Linhas 51-63: "void Pilha::mostrar() const"
+  Loop que percorre os nós da pilha do topo até a base imprimindo cada caractere em formato 
+  visual de seta: ex: "[A] -> [A] -> [$]".
+
+
+--------------------------------------------------------------------------------
+6. ARQUIVO: include/AutomatoPilha.hpp
+--------------------------------------------------------------------------------
+Cabeçalho do Autômato de Pilha (AP).
+
+- Linha 8: "struct Transicao {"
+  Estrutura para armazenar as regras de transição complexas do AP.
+  - 'simbolo_fita': O caractere lido. O valor especial '\0' representa epsilon (leitura vazia).
+  - 'topo_pilha': Caractere que a máquina exige que esteja no topo para fazer a mudança.
+  - 'acao_pilha': Caractere indicando a operação ('E' = Empilhar, 'D' = Desempilhar, 'M' = Manter).
+
+- Linha 21: "Pilha pilha;"
+  Instância da nossa classe 'Pilha'. Ela é inicializada automaticamente.
+
+- Linha 25: "Transicao* transicoes;"
+  Vetor dinâmico de regras de transição. Como não usamos 'std::vector', alocamos um array 
+  bruto de Transicao e o redimensionamos manualmente se enchermos a capacidade.
+
+- Linhas 41-43: "void definir_transicao(...)"
+  Assinatura para registrar a transição no vetor dinâmico.
+
+
+--------------------------------------------------------------------------------
+7. ARQUIVO: src/AutomatoPilha.cpp
+--------------------------------------------------------------------------------
+Aqui reside a inteligência do Autômato de Pilha.
+
+- Linhas 5-17: "AutomatoPilha::AutomatoPilha(...)"
+  Construtor. Além de configurar estados, ele aloca dinamicamente o vetor de transições 
+  com capacidade inicial de 10 posições ('capacidade_transicoes = 10;').
+
+- Linhas 26-33: "void AutomatoPilha::redimensionar_transicoes()"
+  Se o vetor dinâmico de transições encher, dobramos sua capacidade alocando um novo vetor 
+  maior, copiamos todos os dados do vetor antigo para o novo e destruímos o vetor antigo 
+  usando 'delete[] transicoes'.
+
+- Linhas 36-40: "void AutomatoPilha::resetar()"
+  Sobrescreve o resetar comum para limpar a pilha e recolocar o símbolo inicial da pilha 
+  (geralmente '$') como primeiro item.
+
+- Linhas 43-58: "void AutomatoPilha::definir_transicao(...)"
+  Adiciona uma nova regra no vetor dinâmico. Se a quantidade atual bater na capacidade, 
+  chama a função de redimensionamento automático.
+
+- Linhas 61-137: "bool AutomatoPilha::processar(const char* fita)"
+  - Linha 62: "resetar();"
+    Garante inicialização limpa da máquina antes de ler a fita.
+  - Linhas 68-124: "while (true) {"
+    Loop infinito de processamento de passos.
+  - Linhas 69-70: "char topo = pilha.ler_topo(); char c = fita[i];"
+    Salva o caractere atual da fita e o símbolo atual do topo da pilha.
+  - Linhas 75-86: "1. Tenta transição consumindo o caractere atual da fita"
+    Se a fita não acabou, varre o vetor de transições procurando por uma regra cujo 
+    'estado_de' seja o atual, 'simbolo_fita' seja a letra lida e 'topo_pilha' seja o topo atual.
+  - Linhas 88-99: "2. Se não achou, tenta transição-epsilon (representada por '\0')"
+    Se nenhuma regra bateu com o caractere, o autômato tenta buscar uma transição do tipo 
+    epsilon (sem ler da fita, ou seja, 'simbolo_fita == '\0'') sob o mesmo estado e topo.
+  - Linhas 102-111:
+    Se não encontrou nenhuma das duas opções de transição:
+    - Se o caractere atual for '\0' (fim da fita), sai do loop principal com sucesso.
+    - Se a fita não terminou, significa que a máquina travou em erro. Retorna falso.
+  - Linhas 114: "Transicao t = transicoes[t_idx];"
+    Recupera a regra de transição vencedora.
+  - Linhas 121-125: "Modifica a pilha conforme a ação"
+    - Se 'acao_pilha' for 'D' (Desempilhar): chama 'pilha.desempilhar()'.
+    - Se 'acao_pilha' for 'E' (Empilhar): chama 'pilha.empilhar(t.simbolo_empilhar)'.
+    - Se for 'M' (Manter): a pilha não sofre modificações.
+  - Linhas 130-132: "if (consumiu_fita) { i++; }"
+    Se a transição usada consumiu o caractere físico da fita, incrementamos o índice 'i' 
+    para apontar para a próxima letra. Caso tenha sido transição-epsilon, 'i' continua 
+    igual, de modo que o caractere atual será processado novamente sob o novo estado/topo.
+  - Linha 135: "bool aceito = estados_aceitacao[estado_atual];"
+    Ao sair do processamento, a cadeia é considerada ACEITA apenas se o estado no qual a 
+    máquina encerrou o fluxo é um estado marcado no vetor de aceitação.
+
+
+--------------------------------------------------------------------------------
+8. ARQUIVO: src/main.cpp
+--------------------------------------------------------------------------------
+Contém o ponto de entrada ('main') e a declaração dos autômatos específicos.
+
+- Linhas 4-34: "void testar_automato_finito()"
+  - Inicializa o vetor de aceitação (apenas o estado 1 aceita).
+  - Cria o autômato finito de 4 estados.
+  - Configura as transições para ler cadeias começando com 'a' e tendo quantidade par 
+    de 'b's (ex: E0 le 'a' -> vai para E1; de E1 com 'b' -> vai para E2; de E2 com 'b' -> volta para E1).
+  - Executa um loop de strings de teste ("a", "ab", "abb", etc.) e mostra os logs na tela.
+
+- Linhas 36-69: "void testar_automato_pilha()"
+  - Define o estado 2 como aceitação.
+  - Instancia o Autômato de Pilha de 3 estados com o marcador de base da pilha '$'.
+  - Adiciona as regras da linguagem clássica a^n b^n:
+    * E0 lê 'a' e o topo é '$' ou 'A' -> Empilha 'A' e permanece no E0.
+    * E0 lê 'b' e o topo é 'A' -> Desempilha 'A' e transiciona para E1.
+    * E1 lê 'b' e o topo é 'A' -> Desempilha 'A' e permanece no E1.
+    * E1 lê '\0' (fim de fita) e o topo voltou a ser '$' (pilha limpa) -> Vai para E2 (aceita).
+  - Roda os cenários de teste, imprimindo o estado da pilha a cada passo.
+
+- Linhas 71-76: "int main()"
+  Chama ambas as funções de teste em sequência e encerra o programa.
+================================================================================
