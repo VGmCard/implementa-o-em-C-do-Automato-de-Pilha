@@ -1,6 +1,6 @@
-# Simulador de Autômatos em C++
+# Implementação em C++ de Autômatos Finitos e de Pilha
 
-Este projeto consiste em um simulador didático desenvolvido em C++ de dois modelos fundamentais da Teoria da Computação: o **Autômato Finito Determinístico (AFD)** e o **Autômato de Pilha Determinístico (AP)**. Utilizando os princípios de Programação Orientada a Objetos (POO), o simulador demonstra em tempo real o funcionamento das transições de estado, leitura de fitas de entrada e a manipulação de memória dinâmica através de uma implementação própria de Pilha Encadeada. As palavras de teste podem ser customizadas dinamicamente através de um arquivo `fita.txt` e o processamento é exibido passo a passo com delay no console.
+Este projeto consiste em um simulador didático desenvolvido em C++ de dois modelos fundamentais da Teoria da Computação: o **Autômato Finito Determinístico (AFD)** e o **Autômato de Pilha Determinístico (AP)**. Utilizando os princípios de Programação Orientada a Objetos (POO), o simulador demonstra o funcionamento das transições de estado, leitura de fitas de entrada e a manipulação de memória dinâmica através de uma implementação própria de Pilha Encadeada. As palavras de teste podem ser customizadas dinamicamente através de um arquivo `fita.txt` e o processamento é exibido passo a passo com delay no console.
 
 ---
 
