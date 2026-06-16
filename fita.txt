@@ -1,0 +1,10 @@
+ab
+aabb
+aaabbb
+aab
+abb
+a
+b
+aba
+abbb
+abbbb

@@ -1,5 +1,7 @@
 #include "../include/AutomatoFinito.hpp"
 #include <iostream>
+#include <thread>
+#include <chrono>
 
 // Construtor
 AutomatoFinito::AutomatoFinito(int n_estados, int t_alfabeto, int inicial, const bool* aceitacao)
@@ -66,9 +68,17 @@ bool AutomatoFinito::processar(const char* fita) {
             return false;
         }
 
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        std::cout << "[AFD] E" << estado_atual << " | Lendo '" << c << "' -> E" << proximo << "\n";
+
         estado_atual = proximo;
         i++;
     }
 
-    return estados_aceitacao[estado_atual];
+    bool aceito = estados_aceitacao[estado_atual];
+    std::cout << "[AFD] Fim do processamento. Estado final: E" << estado_atual 
+              << " -> " << (aceito ? "ACEITO" : "REJEITADO") << "\n\n";
+
+    return aceito;
 }
+

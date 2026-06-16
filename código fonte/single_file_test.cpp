@@ -1,4 +1,6 @@
 #include <iostream>
+#include <thread>
+#include <chrono>
 
 // ============================================================================
 // 1. CLASSE BASE: Automato
@@ -90,10 +92,16 @@ public:
                 return false;
             }
 
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::cout << "[AFD] E" << estado_atual << " | Lendo '" << c << "' -> E" << proximo << "\n";
+
             estado_atual = proximo;
             i++;
         }
-        return estados_aceitacao[estado_atual];
+        bool aceito = estados_aceitacao[estado_atual];
+        std::cout << "[AFD] Fim do processamento. Estado final: E" << estado_atual 
+                  << " -> " << (aceito ? "ACEITO" : "REJEITADO") << "\n\n";
+        return aceito;
     }
 };
 
@@ -267,6 +275,7 @@ public:
             }
 
             Transicao t = transicoes[t_idx];
+            std::this_thread::sleep_for(std::chrono::seconds(1));
             std::cout << "[AP] E" << estado_atual << " | Lendo '" << (consumiu_fita ? c : 'e') 
                       << "' | Topo '" << (topo ? topo : 'e') << "' -> ";
 
@@ -311,7 +320,12 @@ void testar_automato_finito() {
     afd.definir_transicao(2, 'a', 2);
     afd.definir_transicao(2, 'b', 1);
 
-    const char* testes[] = { "a", "abb", "abbbb", "ab", "abbb", "b", "aba" };
+    // Casos de teste expandidos
+    const char* testes[] = { 
+        "a", "abb", "abbbb", "ab", "abbb", "b", "aba", 
+        "aa", "abab", "ababa", "bab", "bbbb", 
+        "aababbabbb", "ababbabaab", "aaaaaaaa" 
+    };
     for (const char* fita : testes) {
         std::cout << "Palavra: \"" << fita << "\"\n";
         bool result = afd.processar(fita);
@@ -335,7 +349,12 @@ void testar_automato_pilha() {
     ap.definir_transicao(1, 'b', 'A', 1, 'D');
     ap.definir_transicao(1, '\0', '$', 2, 'M'); 
 
-    const char* testes[] = { "ab", "aabb", "aaabbb", "aab", "abb", "aaabb", "b", "a" };
+    // Casos de teste expandidos
+    const char* testes[] = { 
+        "ab", "aabb", "aaabbb", "aaaabbbb", "aaaaabbbbb", 
+        "aab", "abb", "aaabb", "b", "a", 
+        "ba", "abba", "aba", "aaaaabbbb", "aaaabbbbb" 
+    };
     for (const char* fita : testes) {
         std::cout << "Testando palavra: \"" << fita << "\"\n";
         bool result = ap.processar(fita);

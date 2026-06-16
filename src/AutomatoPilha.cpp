@@ -1,5 +1,7 @@
 #include "../include/AutomatoPilha.hpp"
 #include <iostream>
+#include <thread>
+#include <chrono>
 
 // Construtor
 AutomatoPilha::AutomatoPilha(int n_estados, int inicial, char simb_inicial_pilha, const bool* aceitacao)
@@ -118,6 +120,8 @@ bool AutomatoPilha::processar(const char* fita) {
 
         // Aplica a transição encontrada
         Transicao t = transicoes[t_idx];
+        
+        std::this_thread::sleep_for(std::chrono::seconds(1));
         
         std::cout << "[AP] E" << estado_atual << " | Lendo '" << (consumiu_fita ? c : 'e') 
                   << "' | Topo '" << (topo ? topo : 'e') << "' -> ";
